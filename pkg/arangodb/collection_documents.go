@@ -81,11 +81,11 @@ type CollectionDocuments interface {
 	// The documents data is stored into elements of the given results slice,
 	// the documents meta data is returned.
 	// If no document exists with a given key, a NotFoundError is returned at its errors index.
-	ReadDocuments(ctx context.Context, keys []string, results interface{}) (CollectionDocumentReadResponseReader, error)
+	ReadDocuments(ctx context.Context, keys []string) (CollectionDocumentReadResponseReader, error)
 
 	// ReadDocuments reads multiple documents with given keys from the collection.
 	// The documents data is stored into elements of the given results slice,
 	// the documents meta data is returned.
 	// If no document exists with a given key, a NotFoundError is returned at its errors index.
-	ReadDocumentsWithOptions(ctx context.Context, keys []string, results interface{}, opts *CollectionDocumentReadOptions) (CollectionDocumentReadResponseReader, error)
+	ReadDocumentsWithOptions(ctx context.Context, keys []string, opts *CollectionDocumentReadOptions) (CollectionDocumentReadResponseReader, error)
 }

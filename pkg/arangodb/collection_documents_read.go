@@ -26,12 +26,11 @@ import (
 
 type CollectionDocumentReadResponseReader interface {
 	Close() error
-	Read() (CollectionDocumentReadResponse, bool, error)
+	Read(i interface{}) (CollectionDocumentReadResponse, bool, error)
 }
 
 type CollectionDocumentReadResponse struct {
 	driver.DocumentMeta
-	Response
 }
 
 type CollectionDocumentReadOptions struct {

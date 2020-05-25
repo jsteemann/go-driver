@@ -31,7 +31,7 @@ type CollectionDocumentCreateResponseReader interface {
 
 type CollectionDocumentCreateResponse struct {
 	driver.DocumentMeta
-	Response
+	ResponseStruct
 
 	Old, New interface{}
 }

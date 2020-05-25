@@ -43,7 +43,7 @@ type collectionDocuments struct {
 	collection *collection
 }
 
-func (c collectionDocuments) ReadDocumentsWithOptions(ctx context.Context, keys []string, result interface{}, opts *CollectionDocumentReadOptions) (CollectionDocumentReadResponseReader, error) {
+func (c collectionDocuments) ReadDocumentsWithOptions(ctx context.Context, keys []string, opts *CollectionDocumentReadOptions) (CollectionDocumentReadResponseReader, error) {
 	url := c.collection.url("document")
 
 	req, err := c.collection.connection().NewRequest(http.MethodPut, url)
@@ -64,15 +64,15 @@ func (c collectionDocuments) ReadDocumentsWithOptions(ctx context.Context, keys 
 
 	switch resp.Code() {
 	case http.StatusOK:
-		return newCollectionDocumentReadResponseReader(arr, result, opts), nil
+		return newCollectionDocumentReadResponseReader(arr, opts), nil
 	default:
 		arr.Close()
 		return nil, connection.NewError(resp.Code(), "unexpected code")
 	}
 }
 
-func (c collectionDocuments) ReadDocuments(ctx context.Context, keys []string, result interface{}) (CollectionDocumentReadResponseReader, error) {
-	return c.ReadDocumentsWithOptions(ctx, keys, result, nil)
+func (c collectionDocuments) ReadDocuments(ctx context.Context, keys []string) (CollectionDocumentReadResponseReader, error) {
+	return c.ReadDocumentsWithOptions(ctx, keys, nil)
 }
 
 func (c collectionDocuments) ReadDocument(ctx context.Context, key string, result interface{}) (driver.DocumentMeta, error) {
@@ -155,13 +155,13 @@ func (c collectionDocuments) CreateDocumentWithOptions(ctx context.Context, docu
 
 	response := struct {
 		*driver.DocumentMeta
-		*Response
+		*ResponseStruct
 
 		Old *unmarshalInto `json:"old,omitempty"`
 		New *unmarshalInto `json:"new,omitempty"`
 	}{
-		DocumentMeta: &meta.DocumentMeta,
-		Response:     &meta.Response,
+		DocumentMeta:   &meta.DocumentMeta,
+		ResponseStruct: &meta.ResponseStruct,
 
 		Old: newUnmarshalInto(meta.Old),
 		New: newUnmarshalInto(meta.New),
@@ -225,7 +225,7 @@ type collectionDocumentCreateResponseReader struct {
 	options  *CollectionDocumentCreateOptions
 	response struct {
 		*driver.DocumentMeta
-		*Response
+		*ResponseStruct
 
 		Old *unmarshalInto `json:"old,omitempty"`
 		New *unmarshalInto `json:"new,omitempty"`
@@ -249,7 +249,7 @@ func (c *collectionDocumentCreateResponseReader) Read() (CollectionDocumentCreat
 	}
 
 	c.response.DocumentMeta = &meta.DocumentMeta
-	c.response.Response = &meta.Response
+	c.response.ResponseStruct = &meta.ResponseStruct
 
 	if err := c.array.Unmarshal(&c.response); err != nil {
 		return CollectionDocumentCreateResponse{}, false, err
@@ -258,10 +258,8 @@ func (c *collectionDocumentCreateResponseReader) Read() (CollectionDocumentCreat
 	return meta, true, nil
 }
 
-func newCollectionDocumentReadResponseReader(array connection.Array, obj interface{}, options *CollectionDocumentReadOptions) *collectionDocumentReadResponseReader {
+func newCollectionDocumentReadResponseReader(array connection.Array, options *CollectionDocumentReadOptions) *collectionDocumentReadResponseReader {
 	c := &collectionDocumentReadResponseReader{array: array, options: options}
-
-	c.response.unmarshalInto = newUnmarshalInto(obj)
 
 	return c
 }
@@ -281,7 +279,7 @@ func (c *collectionDocumentReadResponseReader) Close() error {
 	return c.array.Close()
 }
 
-func (c *collectionDocumentReadResponseReader) Read() (CollectionDocumentReadResponse, bool, error) {
+func (c *collectionDocumentReadResponseReader) Read(i interface{}) (CollectionDocumentReadResponse, bool, error) {
 	if !c.array.More() {
 		return CollectionDocumentReadResponse{}, false, nil
 	}
@@ -289,6 +287,7 @@ func (c *collectionDocumentReadResponseReader) Read() (CollectionDocumentReadRes
 	var meta CollectionDocumentReadResponse
 
 	c.response.DocumentMeta = &meta.DocumentMeta
+	c.response.unmarshalInto = newUnmarshalInto(i)
 
 	if err := c.array.Unmarshal(&c.response); err != nil {
 		return CollectionDocumentReadResponse{}, false, err
