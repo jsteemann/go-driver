@@ -26,10 +26,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/arangodb/go-driver/jwt"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/arangodb/go-driver/jwt"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
